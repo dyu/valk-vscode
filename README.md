@@ -1,7 +1,7 @@
 
 # Valk vscode extension
 
-A vscode extension for `valk` language text highlighting and language server support.
+A vscode extension for `valk` language text highlighting and language server support (diagnostics, hover, signature help, completion, go-to-definition, references, rename, document/workspace symbols, formatting, code actions, inlay hints, and semantic tokens).
 
 ## Diagnostics
 

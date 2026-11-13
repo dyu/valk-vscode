@@ -2,7 +2,7 @@
   "name": "valk",
   "displayName": "Valk language",
   "publisher": "valk-lang",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "icon": "images/valk-logo.png",
   "repository": {
     "url": "https://github.com/valk-lang/valk-vscode"
@@ -11,7 +11,8 @@
     "vscode": "^1.80.0"
   },
   "activationEvents": [
-    "onStartupFinished"
+    "onLanguage:valk",
+    "workspaceContains:**/valk.json"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -22,8 +23,7 @@
       {
         "id": "valk",
         "extensions": [
-          ".valk",
-          ".valk.h"
+          ".valk"
         ],
         "configuration": "./language-config.json",
         "icon": {
@@ -103,6 +103,7 @@
     ]
   },
   "scripts": {
+    "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./"
   },

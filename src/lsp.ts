@@ -25,6 +25,7 @@ function diagnosticsMode(): DiagnosticsMode {
 }
 
 export async function startLsp(context: vscode.ExtensionContext, output: vscode.OutputChannel) {
+	if (client) return;
 
 	output.appendLine('Starting valk language server');
 
@@ -61,6 +62,9 @@ export async function startLsp(context: vscode.ExtensionContext, output: vscode.
 			const child = spawn(cmd, ["lsp", "run"], {
 				stdio: ['pipe', 'pipe', 'pipe']
 			});
+			child.on('error', err => {
+				output.appendLine('Failed to spawn Valk LSP: ' + err);
+			});
 
 			// Wrap stdout so we can log everything coming from the server
 			const loggingReadable = new stream.PassThrough();
@@ -92,7 +96,7 @@ export async function startLsp(context: vscode.ExtensionContext, output: vscode.
 		documentSelector: [{ scheme: "file", language: "valk" }],
 		outputChannel: output,
 		traceOutputChannel: output,
-		revealOutputChannelOn: RevealOutputChannelOn.Info,
+		revealOutputChannelOn: RevealOutputChannelOn.Error,
 		initializationOptions: {
 			diagnosticsMode: diagnosticsMode(),
 		},
@@ -105,7 +109,7 @@ export async function startLsp(context: vscode.ExtensionContext, output: vscode.
 			serverOptions,
 			clientOptions
 		);
-		client.setTrace(Trace.Verbose);
+		client.setTrace(is_debug ? Trace.Verbose : Trace.Off);
 
 		await client.start();
 		output.appendLine('Valk language server is running');
@@ -130,7 +134,7 @@ export async function updateDiagnosticsMode() {
 	});
 }
 
-export async function stopLsp(context: vscode.ExtensionContext, output: vscode.OutputChannel) {
+export async function stopLsp(_context?: vscode.ExtensionContext, _output?: vscode.OutputChannel): Promise<void> {
     if (!client) return;
     let prev = client
     client = null

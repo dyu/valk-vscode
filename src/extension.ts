@@ -22,6 +22,23 @@ export function activate(context: vscode.ExtensionContext) {
             await restartLsp(context, output);
         }),
 		vscode.workspace.onDidChangeConfiguration(async event => {
+			if (
+				event.affectsConfiguration('valk.lsp.enable') ||
+				event.affectsConfiguration('valk.path') ||
+				event.affectsConfiguration('valk.lsp.debug')
+			) {
+				const enabled = vscode.workspace.getConfiguration('valk').get<boolean>('lsp.enable', true);
+				try {
+					if (!enabled) {
+						await stopLsp(context, output);
+					} else {
+						await restartLsp(context, output);
+					}
+				} catch (err) {
+					output.appendLine('Failed to reload Valk language server: ' + err);
+				}
+				return;
+			}
 			if (!event.affectsConfiguration('valk.lsp.diagnosticsMode')) return;
 			try {
 				await updateDiagnosticsMode();
@@ -39,4 +56,6 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 // This method is called when your extension is deactivated
-export function deactivate() { }
+export function deactivate(): Thenable<void> | undefined {
+	return stopLsp();
+}
