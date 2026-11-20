@@ -7,6 +7,7 @@
         { "include": "#comments" },
         { "include": "#meta" },
         { "include": "#strings" },
+        { "include": "#field-tags" },
         { "include": "#numbers" },
         { "include": "#keywords" },
         { "include": "#types" },
@@ -42,7 +43,11 @@
             "patterns": [
                 {
                     "name": "keyword.control.directive.valk",
-                    "match": "^\\s*#(if|elif|else|end|loop|error|print|embed|string)\\b"
+                    "match": "^\\s*#(if|elif|else|end|loop|error|print)\\b"
+                },
+                {
+                    "name": "keyword.control.directive.valk",
+                    "match": "#(embed_dir|embed|string)\\b"
                 }
             ]
         },
@@ -87,11 +92,85 @@
                     "end": "\\}",
                     "beginCaptures": { "0": { "name": "punctuation.section.interpolation.begin.valk" } },
                     "endCaptures": { "0": { "name": "punctuation.section.interpolation.end.valk" } },
-                    "patterns": [{ "include": "$self" }]
+                    "patterns": [
+                        {
+                            "name": "meta.format-specifier.valk",
+                            "match": "(?<!\\s)(:)(?!\\})((?:[^}\\\\\"]?[<>^])?[+\\- ]?#?0?[0-9]*(?:\\.[0-9]+)?[dxXbofeEs]?)(?=\\})",
+                            "captures": {
+                                "1": { "name": "punctuation.separator.format-specifier.valk" },
+                                "2": { "name": "constant.other.placeholder.valk" }
+                            }
+                        },
+                        {
+                            "begin": "\\{",
+                            "end": "\\}",
+                            "patterns": [{ "include": "$self" }]
+                        },
+                        { "include": "$self" }
+                    ]
                 },
                 {
                     "name": "variable.other.interpolated.valk",
                     "match": "%[_a-zA-Z][_a-zA-Z0-9]*"
+                }
+            ]
+        },
+        "field-tags": {
+            "patterns": [
+                {
+                    "name": "meta.annotation.tag.valk",
+                    "begin": "`",
+                    "end": "`",
+                    "beginCaptures": { "0": { "name": "punctuation.definition.tag.begin.valk" } },
+                    "endCaptures": { "0": { "name": "punctuation.definition.tag.end.valk" } },
+                    "patterns": [{ "include": "#tag-entries" }]
+                },
+                {
+                    "name": "meta.annotation.tag.valk",
+                    "begin": "(?<!\\.)(\\$tag)(\\()",
+                    "end": "\\)",
+                    "beginCaptures": {
+                        "1": { "name": "support.constant.valk" },
+                        "2": { "name": "punctuation.section.arguments.begin.valk" }
+                    },
+                    "endCaptures": {
+                        "0": { "name": "punctuation.section.arguments.end.valk" }
+                    },
+                    "patterns": [{ "include": "#tag-entries" }]
+                }
+            ]
+        },
+        "tag-entries": {
+            "patterns": [
+                {
+                    "name": "string.quoted.double.valk",
+                    "begin": "\"",
+                    "end": "\"",
+                    "patterns": [
+                        {
+                            "name": "constant.character.escape.valk",
+                            "match": "\\\\([nrtbfvae0'\"\\\\]|x[0-9a-fA-F]{2}|u\\{[0-9a-fA-F]+\\})"
+                        },
+                        {
+                            "name": "invalid.illegal.unrecognized-string-escape.valk",
+                            "match": "\\\\."
+                        }
+                    ]
+                },
+                {
+                    "match": "\\b([_a-zA-Z][_a-zA-Z0-9]*)(\\s*)(:)",
+                    "captures": {
+                        "1": { "name": "entity.other.attribute-name.valk" },
+                        "3": { "name": "punctuation.separator.key-value.valk" }
+                    }
+                },
+                {
+                    "name": "entity.other.attribute-name.valk",
+                    "match": "\\b[_a-zA-Z][_a-zA-Z0-9]*\\b"
+                },
+                {
+                    "name": "punctuation.separator.valk",
+                    "match": ","
                 }
             ]
         },
@@ -111,7 +190,7 @@
                 },
                 {
                     "name": "constant.numeric.octal.valk",
-                    "match": "\\b0o[0-7][0-7_]*\\b"
+                    "match": "\\b0[co][0-7][0-7_]*\\b"
                 },
                 {
                     "name": "constant.numeric.float.valk",
@@ -126,19 +205,27 @@
         "keywords": {
             "patterns": [
                 {
-                    "match": "\\b(if|else|while|each|match|return|break|continue|defer|throw|co|await|lock|as|skip)\\b",
+                    "match": "(?<!\\.)\\b(if|else|while|each|match|return|break|continue|defer|throw|co|await|lock|as|skip)\\b",
                     "name": "keyword.control.valk"
                 },
                 {
-                    "match": "\\b(fn|class|struct|trait|interface|union|enum|mode|type|value|error|alias|extend|use|link|extern|export|global|shared|static|atomic|local|mut|get|set|test|copy|clone)\\b",
+                    "match": "(?<!\\.)\\bdefault(?=\\s*=>)",
+                    "name": "keyword.control.valk"
+                },
+                {
+                    "match": "(?<!\\.)\\b(fn|let|const|class|struct|trait|interface|union|enum|alias|extend|use|link|extern|export|global|shared|static|atomic|locked|local|mut|test|synctest|bench|copy|clone|is_a)\\b",
                     "name": "keyword.other.valk"
                 },
                 {
-                    "match": "\\b(true|false|null)\\b",
+                    "match": "(?<!\\.)\\b(is|mode|type|value|error|get|set|group|packed|extends|payload)\\b(?!\\s*[:=])",
+                    "name": "keyword.other.valk"
+                },
+                {
+                    "match": "(?<!\\.)\\b(true|false|null)\\b",
                     "name": "constant.language.valk"
                 },
                 {
-                    "match": "\\bthis\\b",
+                    "match": "(?<!\\.)\\bthis\\b",
                     "name": "variable.language.valk"
                 },
                 {
@@ -158,7 +245,7 @@
                     "name": "support.type.primitive.valk"
                 },
                 {
-                    "match": "\\b(String|Array|Map|HashMap|FlatMap|HashSet|Deque|Heap|ByteBuffer|ByteReader|Arena|Link|Lock)\\b",
+                    "match": "\\b(SELF|String|Array|Map|HashMap|FlatMap|HashSet|BTreeMap|BTreeSet|BTreeRange|BTreeSetRange|Deque|Heap|ByteBuffer|ByteReader|Arena|ArenaView|Link|Lock|Weak|Fd)\\b",
                     "name": "support.type.valk"
                 },
                 {
@@ -174,7 +261,7 @@
         "functions": {
             "patterns": [
                 {
-                    "match": "\\b(isset|print|println|panic|assert|exit|error_is)(?=\\s*\\()",
+                    "match": "(?<!\\.)\\b(isset|typeof|size_of|is_defined|print|println|panic|assert|exit|raise|error_is|atomic_cas|atomic_load|atomic_store)(?=\\s*\\()",
                     "name": "support.function.builtin.valk"
                 },
                 {
@@ -187,7 +274,7 @@
             "patterns": [
                 {
                     "name": "keyword.operator.valk",
-                    "match": "(!\\?|!!|!>|\\?\\?|\\?\\.|=>|->|\\.\\.|=|!|\\*|\\+|-|/|&|\\^|\\||:|<|>|%|\\?)"
+                    "match": "(<<=|>>=|\\.\\.\\.|!\\?|\\?!|!!|!>|\\?\\?|\\?\\.|=>|->|\\.\\.|<<|>>|<=|>=|==|!=|&&|\\|\\||\\+\\+|--|\\+=|-=|\\*=|/=|%=|&=|\\|=|\\^=|=|!|\\*|\\+|-|/|&|\\^|\\||~|:|<|>|%|\\?)"
                 }
             ]
         }

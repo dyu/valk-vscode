@@ -1,0 +1,224 @@
+{
+    "Function": {
+        "prefix": "fn",
+        "body": [
+            "fn ${1:name}(${2}) ${3:void} {",
+            "\t$0",
+            "}"
+        ],
+        "description": "Function declaration"
+    },
+    "Fallible Function": {
+        "prefix": "fne",
+        "body": [
+            "fn ${1:name}(${2}) ${3:void} !${4:Error} {",
+            "\t$0",
+            "}"
+        ],
+        "description": "Function declaration with error type"
+    },
+    "Generic Function": {
+        "prefix": "fng",
+        "body": [
+            "fn ${1:name}[${2:T is Interface}](${3:value: T}) ${4:void} {",
+            "\t$0",
+            "}"
+        ],
+        "description": "Generic function with optional type constraint"
+    },
+    "Main Function": {
+        "prefix": "main",
+        "body": [
+            "fn main() {",
+            "\t$0",
+            "}"
+        ],
+        "description": "Main entry point"
+    },
+    "Class": {
+        "prefix": "class",
+        "body": [
+            "class ${1:Name} {",
+            "\t${2:field}: ${3:String}",
+            "\t$0",
+            "}"
+        ],
+        "description": "Class declaration"
+    },
+    "Struct": {
+        "prefix": "struct",
+        "body": [
+            "struct ${1:Name} {",
+            "\t${2:field}: ${3:int}",
+            "\t$0",
+            "}"
+        ],
+        "description": "Struct declaration"
+    },
+    "Interface": {
+        "prefix": "interface",
+        "body": [
+            "interface ${1:Name} {",
+            "\tfn ${2:method}(${3}) ${4:void};",
+            "}"
+        ],
+        "description": "Interface declaration"
+    },
+    "Trait": {
+        "prefix": "trait",
+        "body": [
+            "trait ${1:Name} {",
+            "\t$0",
+            "}"
+        ],
+        "description": "Trait declaration"
+    },
+    "Tagged Union": {
+        "prefix": "union",
+        "body": [
+            "union ${1:Name} {",
+            "\t${2:ok}(${3:int})",
+            "\t${4:none}",
+            "}"
+        ],
+        "description": "Named tagged union declaration"
+    },
+    "Enum": {
+        "prefix": "enum",
+        "body": [
+            "enum ${1:Name} {",
+            "\t${2:first}",
+            "\t${3:second}",
+            "}"
+        ],
+        "description": "Enum declaration"
+    },
+    "Error Type": {
+        "prefix": "error",
+        "body": [
+            "error ${1:MyError} (${2:failed})"
+        ],
+        "description": "Error type declaration"
+    },
+    "Extend": {
+        "prefix": "extend",
+        "body": [
+            "extend ${1:Type} {",
+            "\t$0",
+            "}"
+        ],
+        "description": "Extend type with additional members"
+    },
+    "Match": {
+        "prefix": "match",
+        "body": [
+            "match ${1:value} {",
+            "\t${2:.a} => ${3}",
+            "\tdefault => $0",
+            "}"
+        ],
+        "description": "Match expression or statement"
+    },
+    "Each Loop": {
+        "prefix": "each",
+        "body": [
+            "each ${1:items} as ${2:item} {",
+            "\t$0",
+            "}"
+        ],
+        "description": "Iterate over a collection"
+    },
+    "Each Borrow Loop": {
+        "prefix": "eachref",
+        "body": [
+            "each ${1:items} as &${2:item} {",
+            "\t$0",
+            "}"
+        ],
+        "description": "Zero-copy element borrow loop"
+    },
+    "Test": {
+        "prefix": "test",
+        "body": [
+            "test \"${1:name}\" {",
+            "\t$0",
+            "}"
+        ],
+        "description": "Test block"
+    },
+    "Sync Test": {
+        "prefix": "synctest",
+        "body": [
+            "synctest \"${1:name}\" {",
+            "\t$0",
+            "}"
+        ],
+        "description": "Synchronous test block"
+    },
+    "Benchmark": {
+        "prefix": "bench",
+        "body": [
+            "bench \"${1:name}\" {",
+            "\twhile b.loop() {",
+            "\t\t$0",
+            "\t}",
+            "}"
+        ],
+        "description": "Benchmark block with Bencher loop"
+    },
+    "Property Tag": {
+        "prefix": "tag",
+        "body": [
+            "\\$tag(${1:json}: \"${2:name}\")"
+        ],
+        "description": "Property metadata $tag(...) annotation"
+    },
+    "Backtick Property Tag": {
+        "prefix": "btag",
+        "body": [
+            "`${1:json}: \"${2:name}\"`"
+        ],
+        "description": "Shorthand backtick property metadata tag"
+    },
+    "Compile-Time Property Loop": {
+        "prefix": "loopprops",
+        "body": [
+            "#loop properties ${1:T} as ${2:prop}",
+            "\t$0",
+            "#end"
+        ],
+        "description": "Compile-time #loop properties reflection block"
+    },
+    "Compile-Time Conditional": {
+        "prefix": "ifmacro",
+        "body": [
+            "#if ${1:cond}",
+            "\t$0",
+            "#end"
+        ],
+        "description": "Compile-time #if ... #end block"
+    },
+    "Weak Reference": {
+        "prefix": "weak",
+        "body": [
+            "Weak[${1:T}].new(${2:value})"
+        ],
+        "description": "Create a weak GC reference"
+    },
+    "Atomic Compare-and-Swap": {
+        "prefix": "cas",
+        "body": [
+            "atomic_cas(${1:target}, ${2:expected}, ${3:desired})"
+        ],
+        "description": "Atomic compare-and-swap builtin"
+    },
+    "Defer": {
+        "prefix": "defer",
+        "body": [
+            "defer {",
+            "\t$0",
+            "}"
+        ],
+        "description": "Defer cleanup block"
+    }
+}

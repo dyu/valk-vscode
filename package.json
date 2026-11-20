@@ -2,7 +2,7 @@
   "name": "valk",
   "displayName": "Valk language",
   "publisher": "valk-lang",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "icon": "images/valk-logo.png",
   "repository": {
     "url": "https://github.com/valk-lang/valk-vscode"
@@ -37,6 +37,12 @@
         "language": "valk",
         "scopeName": "source.valk",
         "path": "./syntax/valk.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "valk",
+        "path": "./snippets/valk.json"
       }
     ],
     "configuration": {
@@ -105,12 +111,15 @@
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./"
+    "watch": "tsc -watch -p ./",
+    "test": "node --test tests/grammar.test.mjs"
   },
   "devDependencies": {
     "@types/node": "^24.2.1",
     "@types/vscode": "^1.80.0",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "vscode-oniguruma": "^2.0.1",
+    "vscode-textmate": "^9.3.2"
   },
   "dependencies": {
     "vscode-languageclient": "^9.0.1"
