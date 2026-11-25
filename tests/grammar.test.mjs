@@ -66,6 +66,19 @@ function assertScope(tokens, text, expectedScope, predicate) {
     );
 }
 
+function assertPlain(tokens, word, line) {
+    const re = new RegExp(`\\b${word}\\b`);
+    const matches = tokens.filter((t) => (line === undefined || t.line === line) && re.test(t.text));
+    assert.ok(matches.length > 0, `Expected plain word "${word}" on line ${line}`);
+    for (const tok of matches) {
+        assert.deepEqual(
+            tok.scopes,
+            ['source.valk'],
+            `Expected "${word}" to be plain unscoped text, got: ${JSON.stringify(tok)}`
+        );
+    }
+}
+
 test('bench and synctest keywords', async () => {
     const tokens = await tokenize(`
 bench "hash payload" {
@@ -195,6 +208,7 @@ let x = match v : int {
     assertScope(tokens, '#embed_dir', 'keyword.control.directive.valk');
     assertScope(tokens, '0c755', 'constant.numeric.octal.valk');
     assertScope(tokens, 'mode', 'keyword.other.valk', (t) => t.line === 5);
+    assertScope(tokens, 'for', 'keyword.other.valk', (t) => t.line === 5);
     assertScope(tokens, 'default', 'keyword.control.valk');
 
     // Variable/field names followed by '=' or ':' should not be highlighted as keywords
@@ -202,6 +216,163 @@ let x = match v : int {
     assert.deepEqual(line3Keywords, ['let']);
     const line4Keywords = tokens.filter((t) => t.line === 4 && t.scopes.includes('keyword.other.valk')).map((t) => t.text);
     assert.deepEqual(line4Keywords, ['let']);
+});
+
+test('named tagged union errors, $auto, !>, throw, is .variant, and built-in error unions', async () => {
+    const tokens = await tokenize(`
++ union AppError {
+    invalid(String)
+    lookup(LookupError) $auto
+    io(io.IoError) $auto
+    fn to_string() String $auto {
+        return match this : String {
+            .invalid(msg) => msg
+            .lookup(e) => e.to_string()
+            .io(e) => e.to_string()
+        }
+    }
+}
+fn load(m: Map[String], k: String) String !AppError {
+    if k.length == 0 : throw .invalid("empty")
+    return m.get(k) !>
+}
+fn check(err: ?AppError) {
+    if err is .lookup : println("missing")
+    let _g: ?GenericError = null
+    let _s: ?SystemError = null
+    let _i: ?IterError = null
+    let _n: ?InitError = null
+    let _y: ?SyntaxError = null
+}
+`);
+    assertScope(tokens, 'union', 'keyword.other.valk');
+    assertScope(tokens, 'LookupError', 'support.type.valk');
+    assertScope(tokens, 'GenericError', 'support.type.valk');
+    assertScope(tokens, 'SystemError', 'support.type.valk');
+    assertScope(tokens, 'IterError', 'support.type.valk');
+    assertScope(tokens, 'InitError', 'support.type.valk');
+    assertScope(tokens, 'SyntaxError', 'support.type.valk');
+    assertScope(tokens, 'throw', 'keyword.control.valk');
+    assertScope(tokens, '!>', 'keyword.operator.valk');
+    assertScope(tokens, 'is', 'keyword.other.valk', (t) => t.line === 18);
+
+    const autoFlags = tokens.filter((t) => t.text === '$auto');
+    assert.equal(autoFlags.length, 3);
+    for (const tok of autoFlags) {
+        assert.ok(tok.scopes.includes('support.constant.valk'));
+    }
+});
+
+test('removed 0.9.0 keywords and builtins are not highlighted', async () => {
+    const tokens = await tokenize(`
+error OldError extends Base {
+    payload { msg: String }
+}
+fn f(x: shared User) {
+    if error_is(e, OldError.fail) {}
+}
+let s = #string("legacy")
+`);
+    assertPlain(tokens, 'error', 1);
+    assertPlain(tokens, 'extends', 1);
+    assertPlain(tokens, 'payload', 2);
+    // `shared T` type modifier was removed in 0.9.0
+    assertPlain(tokens, 'shared', 4);
+
+    // `error_is(...)` builtin was removed in 0.9.0
+    const errorIsTok = findToken(tokens, 'error_is');
+    assert.ok(!errorIsTok.scopes.includes('support.function.builtin.valk'));
+    assert.ok(errorIsTok.scopes.includes('entity.name.function.valk'));
+
+    // `#string` directive does not exist in 0.9.x
+    assert.ok(tokens.every((t) => !t.scopes.includes('keyword.control.directive.valk')));
+});
+
+test('shared global declarations stay highlighted while field/type uses do not', async () => {
+    const tokens = await tokenize(`
+shared counter: uint (0) $align(64)
++ shared flag: bool (false)
+-~ shared state: uint (0)
+extern shared errno: i32
++ export shared total: uint (0)
+class Config {
+    shared: bool (false)
+    items: atomic Array[int]
+}
+`);
+    for (const line of [1, 2, 3, 4, 5]) {
+        assertScope(tokens, 'shared', 'keyword.other.valk', (t) => t.line === line);
+    }
+    assertScope(tokens, 'extern', 'keyword.other.valk', (t) => t.line === 4);
+    assertScope(tokens, 'export', 'keyword.other.valk', (t) => t.line === 5);
+    assertScope(tokens, '$align', 'support.constant.valk', (t) => t.line === 1);
+    assertScope(tokens, 'atomic', 'keyword.other.valk', (t) => t.line === 8);
+
+    assertPlain(tokens, 'shared', 7);
+});
+
+test('clone/copy expressions vs clone/copy/hash method names and identifiers', async () => {
+    const tokens = await tokenize(`
+class Item $atomic {
+    fn clone() SELF {
+        return SELF {}
+    }
+    fn copy() SELF {
+        return SELF {}
+    }
+    fn hash() uint {
+        return 0
+    }
+}
+fn demo(a: Item, p: ptr) {
+    let b = clone a
+    let c = copy a
+    let d = clone &a
+    let e = clone @ptrv(p, int, 0)
+    let f = a.clone()
+    let copy = 1
+}
+`);
+    assertScope(tokens, '$atomic', 'support.constant.valk');
+    assertScope(tokens, 'clone', 'entity.name.function.valk', (t) => t.line === 2);
+    assertScope(tokens, 'copy', 'entity.name.function.valk', (t) => t.line === 5);
+    assertScope(tokens, 'hash', 'entity.name.function.valk', (t) => t.line === 8);
+    assertScope(tokens, 'clone', 'keyword.other.valk', (t) => t.line === 13);
+    assertScope(tokens, 'copy', 'keyword.other.valk', (t) => t.line === 14);
+    assertScope(tokens, 'clone', 'keyword.other.valk', (t) => t.line === 15);
+    assertScope(tokens, 'clone', 'keyword.other.valk', (t) => t.line === 16);
+    assertScope(tokens, '@ptrv', 'keyword.other.intrinsic.valk', (t) => t.line === 16);
+    assertScope(tokens, 'clone', 'entity.name.function.valk', (t) => t.line === 17);
+
+    assertPlain(tokens, 'copy', 18);
+});
+
+test('each borrows, into, $align struct, nonnull, magic constants, and escapes', async () => {
+    const tokens = await tokenize(`
+struct CacheLine $align(64) {
+    value: u64
+}
+fn walk(items: Array[int], pairs: Array[(int, int)]) {
+    each items as &item : println("%item")
+    each items as mut &item {
+        item += 1
+    }
+    each pairs into pair, idx {
+        println("%{__FILE__}:%{__LINE__}")
+    }
+    let _x: nonnull(?int) = 1
+    let ok = "\\%\\u{1F600}\\{"
+}
+`);
+    assertScope(tokens, '$align', 'support.constant.valk');
+    assertScope(tokens, 'mut', 'keyword.other.valk', (t) => t.line === 6);
+    assertScope(tokens, 'into', 'keyword.control.valk', (t) => t.line === 9);
+    assertScope(tokens, '__FILE__', 'constant.language.valk');
+    assertScope(tokens, '__LINE__', 'constant.language.valk');
+    assertScope(tokens, 'nonnull', 'support.function.builtin.valk');
+    assertScope(tokens, '\\%', 'constant.character.escape.valk');
+    assertScope(tokens, '\\u{1F600}', 'constant.character.escape.valk');
+    assertScope(tokens, '\\{', 'invalid.illegal.unrecognized-string-escape.valk');
 });
 
 test('snippets/valk.json and language-config.json are valid', () => {
@@ -214,13 +385,19 @@ test('snippets/valk.json and language-config.json are valid', () => {
         assert.ok(typeof snip.prefix === 'string' && snip.prefix.length > 0, `Snippet "${name}" missing prefix`);
         assert.ok(Array.isArray(snip.body) && snip.body.length > 0, `Snippet "${name}" missing body`);
         assert.ok(typeof snip.description === 'string' && snip.description.length > 0, `Snippet "${name}" missing description`);
+        const joined = snip.body.join('\n');
+        assert.ok(!/\berror\s+/.test(joined), `Snippet "${name}" uses removed 'error' declaration syntax`);
+        assert.ok(!/\berror_is\s*\(/.test(joined), `Snippet "${name}" uses removed 'error_is(...)' builtin`);
+        assert.ok(!/\$clone\b/.test(joined), `Snippet "${name}" uses removed '$clone' syntax`);
     }
-    for (const required of ['bench', 'synctest', 'tag', 'btag', 'weak', 'cas', 'loopprops']) {
+    for (const required of ['error', 'union', 'bench', 'synctest', 'tag', 'btag', 'weak', 'cas', 'loopprops', 'eachref', 'eachmut']) {
         assert.ok(
             Object.values(snippets).some((s) => s.prefix === required),
             `Missing snippet with prefix "${required}"`
         );
     }
+    const errSnip = Object.values(snippets).find((s) => s.prefix === 'error');
+    assert.ok(errSnip.body.join('\n').includes('union '));
     assert.ok(langCfg.autoClosingPairs.some((p) => p.open === '`' && p.close === '`'));
     assert.ok(langCfg.surroundingPairs.some(([o, c]) => o === '`' && c === '`'));
 });

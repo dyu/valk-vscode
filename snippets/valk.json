@@ -11,11 +11,11 @@
     "Fallible Function": {
         "prefix": "fne",
         "body": [
-            "fn ${1:name}(${2}) ${3:void} !${4:Error} {",
+            "fn ${1:name}(${2}) ${3:void} !${4:GenericError} {",
             "\t$0",
             "}"
         ],
-        "description": "Function declaration with error type"
+        "description": "Function declaration with union error type"
     },
     "Generic Function": {
         "prefix": "fng",
@@ -93,12 +93,15 @@
         ],
         "description": "Enum declaration"
     },
-    "Error Type": {
+    "Error Union": {
         "prefix": "error",
         "body": [
-            "error ${1:MyError} (${2:failed})"
+            "union ${1:MyError} {",
+            "\t${2:failed}(${3:String})",
+            "\t$0",
+            "}"
         ],
-        "description": "Error type declaration"
+        "description": "Named tagged union error declaration"
     },
     "Extend": {
         "prefix": "extend",
@@ -136,6 +139,15 @@
             "}"
         ],
         "description": "Zero-copy element borrow loop"
+    },
+    "Each Mutable Borrow Loop": {
+        "prefix": "eachmut",
+        "body": [
+            "each ${1:items} as mut &${2:item} {",
+            "\t$0",
+            "}"
+        ],
+        "description": "Zero-copy mutable element borrow loop"
     },
     "Test": {
         "prefix": "test",

@@ -47,7 +47,7 @@
                 },
                 {
                     "name": "keyword.control.directive.valk",
-                    "match": "#(embed_dir|embed|string)\\b"
+                    "match": "#(embed_dir|embed)\\b"
                 }
             ]
         },
@@ -80,7 +80,7 @@
             "patterns": [
                 {
                     "name": "constant.character.escape.valk",
-                    "match": "\\\\([nrtbfvae0'\"\\\\%{]|x[0-9a-fA-F]{2}|u\\{[0-9a-fA-F]+\\})"
+                    "match": "\\\\([nrtbfvae0'\"\\\\%]|x[0-9a-fA-F]{2}|u\\{[0-9a-fA-F]{1,6}\\})"
                 },
                 {
                     "name": "invalid.illegal.unrecognized-string-escape.valk",
@@ -209,19 +209,35 @@
                     "name": "keyword.control.valk"
                 },
                 {
+                    "match": "(?<!\\.)\\binto\\b(?!\\s*[:=])",
+                    "name": "keyword.control.valk"
+                },
+                {
                     "match": "(?<!\\.)\\bdefault(?=\\s*=>)",
                     "name": "keyword.control.valk"
                 },
                 {
-                    "match": "(?<!\\.)\\b(fn|let|const|class|struct|trait|interface|union|enum|alias|extend|use|link|extern|export|global|shared|static|atomic|locked|local|mut|test|synctest|bench|copy|clone|is_a)\\b",
+                    "match": "^\\s*(?:([-~+]{1,3})\\s*)?(?:(extern|export)\\s+)?(shared)\\b(?=[ \\t]+(?!(?:is|is_a|as|into)\\b)[_a-zA-Z])",
+                    "captures": {
+                        "1": { "name": "keyword.operator.valk" },
+                        "2": { "name": "keyword.other.valk" },
+                        "3": { "name": "keyword.other.valk" }
+                    }
+                },
+                {
+                    "match": "(?<!\\.)\\b(copy|clone)\\b(?=[ \\t]+(?!(?:x|as|is|is_a|in|into|else)\\b)(?:[_a-zA-Z@]|&\\S))",
                     "name": "keyword.other.valk"
                 },
                 {
-                    "match": "(?<!\\.)\\b(is|mode|type|value|error|get|set|group|packed|extends|payload)\\b(?!\\s*[:=])",
+                    "match": "(?<!\\.)\\b(fn|let|const|class|struct|trait|interface|union|enum|alias|extend|use|link|extern|export|global|static|atomic|locked|local|mut|test|synctest|bench|is_a)\\b",
                     "name": "keyword.other.valk"
                 },
                 {
-                    "match": "(?<!\\.)\\b(true|false|null)\\b",
+                    "match": "(?<!\\.)\\b(is|for|mode|type|value|get|set|group|packed)\\b(?!\\s*[:=])",
+                    "name": "keyword.other.valk"
+                },
+                {
+                    "match": "(?<!\\.)\\b(true|false|null|__PATH__|__FILE__|__DIR__|__LINE__)\\b",
                     "name": "constant.language.valk"
                 },
                 {
@@ -245,7 +261,7 @@
                     "name": "support.type.primitive.valk"
                 },
                 {
-                    "match": "\\b(SELF|String|Array|Map|HashMap|FlatMap|HashSet|BTreeMap|BTreeSet|BTreeRange|BTreeSetRange|Deque|Heap|ByteBuffer|ByteReader|Arena|ArenaView|Link|Lock|Weak|Fd)\\b",
+                    "match": "\\b(SELF|String|Array|Map|HashMap|FlatMap|HashSet|BTreeMap|BTreeSet|BTreeRange|BTreeSetRange|Deque|Heap|ByteBuffer|ByteReader|Arena|ArenaView|Link|Lock|Weak|Fd|GenericError|SystemError|IterError|InitError|LookupError|SyntaxError)\\b",
                     "name": "support.type.valk"
                 },
                 {
@@ -261,7 +277,7 @@
         "functions": {
             "patterns": [
                 {
-                    "match": "(?<!\\.)\\b(isset|typeof|size_of|is_defined|print|println|panic|assert|exit|raise|error_is|atomic_cas|atomic_load|atomic_store)(?=\\s*\\()",
+                    "match": "(?<!\\.)\\b(isset|typeof|size_of|is_defined|nonnull|print|println|panic|assert|exit|raise|atomic_cas|atomic_load|atomic_store)(?=\\s*\\()",
                     "name": "support.function.builtin.valk"
                 },
                 {
