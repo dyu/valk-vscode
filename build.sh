@@ -22,4 +22,5 @@ cd $SCRIPT_DIR
 
 [ -e node_modules ] || pnpm install
 
+rm -rf out
 vsce package --no-dependencies

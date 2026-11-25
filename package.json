@@ -109,7 +109,8 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
+    "vscode:prepublish": "npm run bundle",
+    "bundle": "esbuild src/extension.ts --bundle --platform=node --target=node16 --format=cjs --external:vscode --outfile=out/extension.js",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "test": "node --test tests/grammar.test.mjs"
@@ -117,6 +118,7 @@
   "devDependencies": {
     "@types/node": "^16.x",
     "@types/vscode": "1.79.1",
+    "esbuild": "^0.28.2",
     "typescript": "^5.9.2",
     "vscode-oniguruma": "^2.0.1",
     "vscode-textmate": "^9.3.2"
